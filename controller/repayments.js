@@ -96,6 +96,10 @@ exports.getrepayment= async (req, res) => {
       res.status(500).json({ message: 'Error deleting repayment', error: err.message });
     }
   }
+
+  exports.getrepaymentpage = (request, response, next) => {
+    response.sendFile('pendingRepayment.html', { root: 'view' });
+}
   
   
   

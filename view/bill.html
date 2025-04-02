@@ -19,10 +19,16 @@
                     <a class="nav-link text-white" href="/user">Billing</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="/transactions/dailytransaction">Daily Tranction</a>
+                    <a class="nav-link text-white" href="/transactions/dailytransaction">Daily Transaction</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/transactions/stock">Stock</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link text-white" href="/repayments/repaymentpage">Pending Repayments</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link text-white" href="/missingitem/missingitempage">Missing item page</a>
                 </li>
             </ul>
         </div>
@@ -102,6 +108,14 @@
 <button type="button" id="submitButton" class="btn btn-success">Submit</button>
 
     </form>
+</div>
+<div class="card bg-light mb-4">
+    <div class="card-body text-center">
+        <h5 class="card-title">Today's Customers</h5>
+        <button id="decreaseCustomer" class="btn btn-danger">-</button>
+        <span id="customerCount" class="mx-3">0</span>
+        <button id="increaseCustomer" class="btn btn-success">+</button>
+    </div>
 </div>
 <datalist id="productList"></datalist>
 <!-- Link to Bootstrap JS (for functionality like tooltips, popovers, etc.) -->

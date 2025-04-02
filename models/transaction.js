@@ -8,6 +8,7 @@ const sequelize = require('../util/db');
                 model: 'Products',
                 key: 'id',
             },
+            onDelete: 'CASCADE'
         },
        itemsPurchased:{
         type: Sequelize.STRING,

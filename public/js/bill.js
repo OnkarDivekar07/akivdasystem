@@ -168,3 +168,42 @@ function fetchProductList() {
 
 // Fetch and display the products when the page loads
 fetchProductList();
+document.addEventListener('DOMContentLoaded', function () {
+    const customerCountElement = document.getElementById('customerCount');
+    const increaseCustomerButton = document.getElementById('increaseCustomer');
+    const decreaseCustomerButton = document.getElementById('decreaseCustomer');
+
+    // Function to fetch current customer count
+    function fetchCustomerCount() {
+        axios.get('http://localhost:5000/customers/count')
+            .then(response => {
+                customerCountElement.textContent = response.data.count;
+            })
+            .catch(error => {
+                console.error('Error fetching customer count:', error);
+            });
+    }
+
+    // Function to update customer count
+    function updateCustomerCount(change) {
+        axios.post('http://localhost:5000/customers/update', { change: change })
+            .then(response => {
+                customerCountElement.textContent = response.data.count;
+            })
+            .catch(error => {
+                console.error('Error updating customer count:', error);
+            });
+    }
+
+    // Event Listeners
+    increaseCustomerButton.addEventListener('click', function () {
+        updateCustomerCount(1);
+    });
+
+    decreaseCustomerButton.addEventListener('click', function () {
+        updateCustomerCount(-1);
+    });
+
+    // Fetch customer count on page load
+    fetchCustomerCount();
+});

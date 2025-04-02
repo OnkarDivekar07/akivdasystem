@@ -26,6 +26,12 @@
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/transactions/stock">Stock</a>
                 </li>
+                <li class="nav-item active">
+                    <a class="nav-link text-white" href="/repayments/repaymentpage">Pending Repayments</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link text-white" href="/missingitem/missingitem">Missing item page</a>
+                </li>
             </ul>
         </div>
     </nav>
@@ -41,6 +47,12 @@
                 <span id="totalInventoryValue" class="h5">$0.00</span> <!-- This will show the total value -->
             </div>
             <button id="addProduct" class="btn btn-primary">Add New Product</button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-3">
+            <label for="searchProduct" class="form-label">Search Products</label>
+            <input type="text" class="form-control" id="searchProduct" placeholder="Search by name">
         </div>
 
         <div class="table-responsive">

@@ -17,7 +17,8 @@ const productRoutes = require('./routes/productRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const mainpageroute = require('./routes/mainpageroute')
 const repayments=require('./routes/repaymentRoutes')
-
+const emailRoute=require('./routes/email')
+const customerRoute=require('./routes/customerCount')
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -29,7 +30,9 @@ app.use(mainpageroute)
 app.use('/user', user)
  app.use('/products', productRoutes);
  app.use('/transactions', transactionRoutes);
- app.use('/repayment',repayments)
+ app.use('/repayments',repayments)
+ app.use('/sendemail',emailRoute)
+ app.use('/customers',customerRoute)
  app.get('/', (req, res) => {
      res.send('Inventory Management API');
  });

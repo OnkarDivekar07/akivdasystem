@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const inventoryTableBody = document.getElementById('inventoryTableBody');
     const productModal = new bootstrap.Modal(document.getElementById('productModal'));
     const productForm = document.getElementById('productForm');
+    const searchProductInput = document.getElementById('searchProduct');
     
     let products = []; // This will hold the inventory data
 
@@ -22,14 +23,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Function to render the inventory table
-    function renderInventory() {
+    function renderInventory(filteredProducts = products) {
         inventoryTableBody.innerHTML = ''; // Clear the current table body
 
-        products.forEach((product, index) => {
+        filteredProducts.forEach((product, index) => {
             const row = document.createElement('tr');
             
             // Check if the quantity is below 10 to add a red style
-            const quantityClass = product.quantity < 10 ? 'text-danger' : '';
+            const quantityClass = product.quantity < 5 ? 'text-danger' : '';
 
             row.innerHTML = `
                 <td>${product.name}</td>
@@ -44,8 +45,8 @@ document.addEventListener('DOMContentLoaded', function () {
             inventoryTableBody.appendChild(row);
         });
 
-        // Update event listeners
-        updateEventListeners();
+        // Update event listeners for the new list of products (filtered products)
+        updateEventListeners(filteredProducts);
 
         // After rendering, calculate the total inventory value
         calculateTotalInventoryValue();
@@ -55,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function fetchProducts() {
         axios.get('http://localhost:5000/products/getproduct')
             .then(response => {
-                console.log(response)
+                console.log(response);
                 // Update the products array with data from the server
                 products = response.data;  // Assuming the response contains an array of products
                 renderInventory();  // Re-render the table with the fetched products
@@ -75,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Event listener for the product form submit
     productForm.addEventListener('submit', function (e) {
-        e.preventDefault();
+        e.preventDefault();  // Prevent form submission from reloading the page
 
         const name = document.getElementById('productName').value;
         const quantity = parseInt(document.getElementById('productQuantity').value);
@@ -105,18 +106,23 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Update event listeners for quantity inputs and remove buttons
-    function updateEventListeners() {
+    function updateEventListeners(filteredProducts) {
         // Quantity change event listeners
         const quantityInputs = document.querySelectorAll('.product-quantity');
         quantityInputs.forEach(input => {
             input.addEventListener('input', function (e) {
+                e.preventDefault();  // Prevent any unwanted behavior, like form submission or reload
+
                 const index = e.target.getAttribute('data-index');
-                products[index].quantity = parseInt(e.target.value);
-                renderInventory(); // Re-render after update
-                const id = products[index].id;
+                const product = filteredProducts[index];  // Get product from filtered list
+                product.quantity = parseInt(e.target.value);
+
+                renderInventory(filteredProducts); // Re-render after update
+
+                const id = product.id;
 
                 // Update the backend when quantity is changed
-                axios.put(`http://localhost:5000/products/updateproduct/${id}`, products[index])
+                axios.put(`http://localhost:5000/products/updateproduct/${id}`, product)
                     .then(response => {
                         console.log('Product updated:', response.data);
                     })
@@ -131,10 +137,10 @@ document.addEventListener('DOMContentLoaded', function () {
         removeButtons.forEach(button => {
             button.addEventListener('click', function (e) {
                 const index = e.target.getAttribute('data-index');
-                const productId = products[index].id; // Assuming the product has an ID field
-                products.splice(index, 1); // Remove product from array
-                renderInventory(); // Re-render after removal
-
+                const productId = filteredProducts[index].id; // Assuming the product has an ID field
+                filteredProducts.splice(index, 1); // Remove product from array
+                renderInventory(filteredProducts); // Re-render after removal
+                console.log(productId);
                 // Make an API call to remove the product from the backend
                 axios.delete(`http://localhost:5000/products/removeproduct/${productId}`)
                     .then(response => {
@@ -146,6 +152,15 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+
+    // Event listener for search input
+    searchProductInput.addEventListener('input', function () {
+        const query = searchProductInput.value.toLowerCase();
+        const filteredProducts = products.filter(product =>
+            product.name.toLowerCase().includes(query)
+        );
+        renderInventory(filteredProducts); // Re-render with filtered products
+    });
 
     // Initial render of the inventory table (empty initially)
     fetchProducts();  // Fetch products from the backend when the page loads

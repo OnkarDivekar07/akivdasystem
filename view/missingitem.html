@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missing Item Page</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+    <script defer src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/user">Billing</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/transactions/dailytransaction">Daily Transaction</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/transactions/stock">Stock</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link text-white" href="/repayments/repaymentpage">Pending Repayments</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link text-white" href="/missingitem/missingitempage">Missing Item Page</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mt-4">Report a Missing Item</h2>
+        <form id="missingItemForm">
+            <div class="form-group">
+                <label for="itemName">Item Name</label>
+                <input type="text" class="form-control" id="itemName" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea class="form-control" id="description" rows="3" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Report Missing Item</button>
+        </form>
+
+        <h3 class="mt-5">Missing Items List</h3>
+        <table class="table table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="missingItemsList">
+            </tbody>
+        </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function fetchMissingItems() {
+            axios.get('/missingitem/missingitempage')
+                .then(response => {
+                    console.log(response)
+                    let table = document.getElementById("missingItemsList");
+                    table.innerHTML = "";
+                    response.data.forEach(item => {
+                        let row = `<tr>
+                            <td>${item.name}</td>
+                            <td>${item.description}</td>
+                            <td>
+                                <button class='btn btn-warning btn-sm' onclick='editItem(${item.id})'>Edit</button>
+                                <button class='btn btn-danger btn-sm' onclick='deleteItem(${item.id})'>Delete</button>
+                            </td>
+                        </tr>`;
+                        table.innerHTML += row;
+                    });
+                });
+        }
+
+        document.getElementById("missingItemForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let itemName = document.getElementById("itemName").value;
+            let description = document.getElementById("description").value;
+
+            axios.post('/missingitem/missingitempage', {
+                name: itemName, 
+                description: description
+            }).then(() => {
+                document.getElementById("missingItemForm").reset();
+                fetchMissingItems();
+            });
+        });
+
+        function editItem(id) {
+            let newName = prompt("Enter new item name:");
+            let newDescription = prompt("Enter new description:");
+            if (newName && newDescription) {
+                axios.put(`/missingitem/missingitempage/${id}`, {
+                    name: newName, 
+                    description: newDescription
+                }).then(() => fetchMissingItems());
+            }
+        }
+
+        function deleteItem(id) {
+            if (confirm("Are you sure you want to delete this item?")) {
+                axios.delete(`/missingitem/missingitempage/${id}`)
+                    .then(() => fetchMissingItems());
+            }
+        }
+
+        fetchMissingItems();
+    </script>
+</body>
+</html>
