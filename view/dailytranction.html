@@ -10,7 +10,7 @@
 <body>
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -28,13 +28,10 @@
                 <li class="nav-item active">
                     <a class="nav-link text-white" href="/repayments/repaymentpage">Pending Repayments</a>
                 </li>
-                <li class="nav-item active">
-                    <a class="nav-link text-white" href="/missingitem/missingitem">Missing item page</a>
-                </li>
             </ul>
         </div>
     </nav>
-
+<div class="container" id="container">
     <!-- Main Content Section -->
     <div class="container my-5">
         <h2 class="text-center mb-4">Daily Transactions</h2>
@@ -99,5 +96,6 @@
                 console.error('Error fetching transactions:', error); // Log any errors
             });
     </script>
+    </div>
 </body>
 </html>

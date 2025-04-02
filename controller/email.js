@@ -58,13 +58,13 @@ async function getLowStockProducts() {
     });
 }
 
-exports.sendLowStockEmail = async (req, res) => {
+exports.sendLowStockEmail = async (req=null, res=null) => {
     try {
         // Get the low stock products from the database
         const lowStockProducts = await getLowStockProducts();
 
         if (lowStockProducts.length === 0) {
-            return res.status(200).json({
+            if (res)  return res.status(200).json({
                 message: "No low stock products found.",
                 success: true,
             });
@@ -97,21 +97,20 @@ exports.sendLowStockEmail = async (req, res) => {
         // Define the email data
         const messageData = {
             from: `"Your Store" <${process.env.EMAIL_USER}>`,  // Sender email
-            to: "onkardivekar07@gmail.com",  // Replace with the owner's email
+            to: process.env.RECIVER_EMAIL,  // Replace with the owner's email
             subject: "Low Stock Alert: Products Below Threshold",
             html: emailContent,  // Send the email content as HTML
         };
 
         // Send the email
         await transporter.sendMail(messageData);
-
-        return res.status(200).json({
+            if (res) return res.status(200).json({
             message: "Low stock email sent to the owner.",
             success: true,
         });
     } catch (err) {
         console.error("Error sending email:", err);
-        return res.status(500).json({
+        if (res) return res.status(500).json({
             message: err.message || "An error occurred while sending the email.",
             success: false,
         });
@@ -121,5 +120,5 @@ exports.sendLowStockEmail = async (req, res) => {
 
 cron.schedule("0 9 * * 1", () => {
     console.log("Running cron job to send low stock email...");
-    sendLowStockEmail();
+    exports.sendLowStockEmail()
 });
