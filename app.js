@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 const product=require('./models/product')
 const tranction=require('./models/transaction')
 const users=require('./models/userdetails')
+const  InventoTracking=require('./models/inventoryTracking')
 
 const user = require('./routes/userRoutes')
 const productRoutes = require('./routes/productRoutes');
@@ -38,7 +39,7 @@ app.use('/user', user)
  });
 
  sequelize
- .sync({})
+ .sync()
  .then(() => {
    app.listen(PORT, () => {
      console.log(`Server Started On PORT ${PORT}`);

@@ -70,6 +70,7 @@
                         <th>Quantity in Stock</th>
                         <th>Price per Unit</th>
                         <th>Total Value</th>
+                        <th>Threeshold</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -100,6 +101,10 @@
                         <div class="mb-3">
                             <label for="productPrice" class="form-label">Price per Unit</label>
                             <input type="number" class="form-control" id="productPrice" value="0" required min="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="productThreshold" class="form-label">Minimum Threshold</label>
+                            <input type="number" class="form-control" id="productThreshold" value="5" required min="0">
                         </div>
                         <button type="submit" class="btn btn-success">Save Product</button>
                     </form>

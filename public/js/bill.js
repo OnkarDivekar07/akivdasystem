@@ -135,11 +135,13 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 // Handle error
-                console.error('Error submitting transaction:', error);
-                alert('There was an error submitting the transaction.');
+                const errorMessage = error?.response?.data?.details || 'Something went wrong.';
+                alert(errorMessage);
             });
     });
 });
+
+
 
 
 function fetchProductList() {
@@ -207,3 +209,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // Fetch customer count on page load
     fetchCustomerCount();
 });
+
+
+
+document.getElementById('sendStockEmail').addEventListener('click', function() {
+    axios.post('http://localhost:5000/sendemail/email')
+        .then(function (response) {
+            alert('Stock email sent successfully!');
+        })
+        .catch(function (error) {
+            console.error(error);
+            alert('Failed to send stock email.');
+        });
+});
+

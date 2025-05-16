@@ -30,13 +30,17 @@ document.addEventListener('DOMContentLoaded', function () {
             const row = document.createElement('tr');
             
             // Check if the quantity is below 10 to add a red style
-            const quantityClass = product.quantity < 5 ? 'text-danger' : '';
+            const quantityClass = product.quantity < product.threshold ? 'text-danger' : '';
+
 
             row.innerHTML = `
-                <td>${product.name}</td>
+               <td><input type="text" class="form-control product-name" value="${product.name}" data-index="${index}"></td>
                 <td><input type="number" class="form-control product-quantity ${quantityClass}" value="${product.quantity}" data-index="${index}" min="0"></td>
-                <td>$${parseFloat(product.price).toFixed(2)}</td>
+               <td><input type="number" class="form-control product-price" value="${parseFloat(product.price).toFixed(2)}" data-index="${index}" step="0.01" min="0"></td>
                 <td>$${calculateTotalValue(product.quantity, product.price)}</td>
+                 <td>
+        <input type="number" class="form-control product-threshold" value="${product.threshold || 0}" data-index="${index}" min="0">
+    </td>
                 <td>
                     <button type="button" class="btn btn-danger btn-sm remove-product" data-index="${index}">Remove</button>
                 </td>
@@ -56,7 +60,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function fetchProducts() {
         axios.get('http://localhost:5000/products/getproduct')
             .then(response => {
-                console.log(response);
                 // Update the products array with data from the server
                 products = response.data;  // Assuming the response contains an array of products
                 renderInventory();  // Re-render the table with the fetched products
@@ -81,19 +84,20 @@ document.addEventListener('DOMContentLoaded', function () {
         const name = document.getElementById('productName').value;
         const quantity = parseInt(document.getElementById('productQuantity').value);
         const price = parseFloat(document.getElementById('productPrice').value);
-
+        const threshold = parseInt(document.getElementById('productThreshold').value);
         // Prepare the product data object
         const productData = {
             name: name,
             quantity: quantity,
-            price: price
+            price: price,
+            threshold: threshold
         };
 
         // Axios POST request to add the product to the backend
         axios.post('http://localhost:5000/products/addproduct', productData)
             .then(response => {
                 // If successful, add the product to the local array and re-render the inventory table
-                console.log(response.data); // You can log the response if needed
+               // You can log the response if needed
                 products.push({ name, quantity, price });
 
                 // Close the modal and re-render the inventory table
@@ -130,6 +134,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         console.error('Error updating product:', error);
                     });
             });
+            
+            
         });
 
         // Remove product event listeners
@@ -140,7 +146,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const productId = filteredProducts[index].id; // Assuming the product has an ID field
                 filteredProducts.splice(index, 1); // Remove product from array
                 renderInventory(filteredProducts); // Re-render after removal
-                console.log(productId);
                 // Make an API call to remove the product from the backend
                 axios.delete(`http://localhost:5000/products/removeproduct/${productId}`)
                     .then(response => {
@@ -151,6 +156,65 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
             });
         });
+        const thresholdInputs = document.querySelectorAll('.product-threshold');
+    thresholdInputs.forEach(input => {
+        input.addEventListener('input', function (e) {
+            const index = e.target.getAttribute('data-index');
+            const product = filteredProducts[index];
+            product.threshold = parseInt(e.target.value);
+
+            const id = product.id;
+
+            axios.put(`http://localhost:5000/products/updateproduct/${id}`, product)
+                .then(response => {
+                    console.log('Threshold updated:', response.data);
+                })
+                .catch(error => {
+                    console.error('Error updating threshold:', error);
+                });
+        });
+    });
+    // Name change event listeners
+const nameInputs = document.querySelectorAll('.product-name');
+nameInputs.forEach(input => {
+    input.addEventListener('input', function (e) {
+        const index = e.target.getAttribute('data-index');
+        const product = filteredProducts[index];
+        product.name = e.target.value;
+
+        const id = product.id;
+
+        axios.put(`http://localhost:5000/products/updateproduct/${id}`, product)
+            .then(response => {
+                console.log('Product name updated:', response.data);
+            })
+            .catch(error => {
+                console.error('Error updating product name:', error);
+            });
+    });
+});
+
+// Price change event listeners
+const priceInputs = document.querySelectorAll('.product-price');
+priceInputs.forEach(input => {
+    input.addEventListener('input', function (e) {
+        const index = e.target.getAttribute('data-index');
+        const product = filteredProducts[index];
+        product.price = parseFloat(e.target.value);
+
+        const id = product.id;
+
+        axios.put(`http://localhost:5000/products/updateproduct/${id}`, product)
+            .then(response => {
+                console.log('Product price updated:', response.data);
+                renderInventory(filteredProducts); // Re-render to update total value
+            })
+            .catch(error => {
+                console.error('Error updating product price:', error);
+            });
+    });
+});
+
     }
 
     // Event listener for search input

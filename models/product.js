@@ -14,6 +14,11 @@ const sequelize = require('../util/db');
             type: Sequelize.FLOAT,
             allowNull: false,
         },
+        threshold: {
+            type: Sequelize.INTEGER,
+            defaultValue: 5, // or any value you prefer
+            allowNull: false,
+        },
     });
 
 
