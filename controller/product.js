@@ -141,3 +141,32 @@ const trackWeeklyInventory = async () => {
 
 // Run inventory tracking once when the server starts
 trackWeeklyInventory();
+
+
+
+const QRCode = require('qrcode');
+const fs = require('fs');
+
+// Function to generate QR from product ID
+async function generateQrCode(productId) {
+  // Payload to encode in the QR (can be just productId or JSON)
+  const qrData = JSON.stringify({ productId });
+
+  // File path to save image
+  const fileName = `qr_codes/${productId}.png`;
+
+  try {
+    await QRCode.toFile(fileName, qrData, {
+      errorCorrectionLevel: 'H',
+      width: 300,
+    });
+
+    console.log(`✅ QR code saved as ${fileName}`);
+  } catch (err) {
+    console.error("❌ Failed to generate QR", err);
+  }
+}
+
+// Example usage
+const exampleProductId = "PRD-LEDSTRIP-12V";
+generateQrCode(37);
