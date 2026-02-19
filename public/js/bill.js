@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const quantity = row.querySelector('input[name="quantity[]"]').value;
             const price = row.querySelector('input[name="price[]"]').value;
             const total = row.querySelector('input[name="total[]"]').value;
-
+        
             billingData.push({
                 item_name: itemName,
                 quantity: quantity,
@@ -121,7 +121,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 total: total
             });
         });
-
         // Add total amount to the billing data
         const totalAmount = parseFloat(totalAmountElement.textContent);
         billingData.push({ total_amount: totalAmount.toFixed(2) });

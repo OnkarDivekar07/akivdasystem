@@ -1,89 +1,139 @@
+const nodemailer = require('nodemailer');
+const moment = require('moment');
+const crypto = require('crypto');
+const  User = require('../models/userdetails')
+require('dotenv').config();  // For environment variables
 
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const userdetailstable = require('../models/userdetails')
+// Function to generate a random OTP (6-digit number)
+const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();  // Generates a 6-character OTP
+};
 
-function genrateAcesstoken(id, ispremiumuser) {
-    return jwt.sign({ userid: id, ispremiumuser: ispremiumuser }, process.env.secretKey)
-}
+// Send OTP Email
+const sendOTPEmail = async (email, otp) => {
+    const emailContent = `
+        <h2>🔐 OTP for Login</h2>
+        <p>Your OTP for login is: <strong>${otp}</strong></p>
+        <p>This OTP will expire in 10 minutes.</p>
+    `;
 
-exports.usergethomePage = (request, response, next) => {
-    response.sendFile('bill.html', { root: 'view' });
-}
+    const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASSWORD,
+        },
+    });
 
+    const messageData = {
+        from: `"Your Service" <${process.env.EMAIL_USER}>`,  // Your email
+        to: email,  // User's email
+        subject: "Your OTP for Login",
+        html: emailContent,
+    };
 
-
-exports.logindetails = async (req, res,) => {
-    const { email, password } = req.body;
     try {
-        const user = await userdetailstable.findOne({ where: { Email: email } });
-
-        if (user) {
-
-            const passwordMatch = await bcrypt.compare(password, user.password);
-
-            if (passwordMatch) {
-                const token = genrateAcesstoken(user.id, user.ispremiumuser);
-
-                return res.json({ success: true, message: 'Login successful', token: token });
-            } else {
-
-                return res.json({ success: false, message: 'Incorrect password' });
-            }
-        } else {
-            return res.json({ success: false, message: 'User not found' });
-        }
+        await transporter.sendMail(messageData);
+        console.log('OTP email sent successfully');
+    } catch (err) {
+        console.error("Error sending OTP email:", err);
     }
+};
 
-    catch (error) {
-        console.error(error);
-        return res.status(500).json({ success: false, message: 'An error occurred' });
+// API for verifying email and sending OTP
+exports.sendOTP = async (req, res) => {
+    const { email } = req.body;
+    // Check if the provided email matches the admin email from .env
+    if (email !== process.env.ADMIN_EMAIL) {
+        return res.status(400).json({ success: false, message: 'Invalid email address' });
     }
-}
-
-
-
-exports.signupdetails = async (req, res, next) => {
+    
+    const otp = generateOTP();
+    const otpExpiry = moment().add(10, 'minutes').toISOString();  // OTP expiry time set to 10 minutes
+     
+    // Save OTP and its expiry time to the database (You should implement this)
     try {
-        const Name = req.body.name;
-        const email = req.body.email;
-        const password = req.body.password;
+        await User.update(
+            { otp, otpExpiry },  // Update the OTP and expiry time in the database
+            { where: { email: email } }
+        );
 
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        // Send OTP email to the user
+        await sendOTPEmail(email, otp);
 
-        const existingUser = await userdetailstable.findOne({ where: { Email: email } });
-        if (existingUser == null) {
-            const userinfo = await userdetailstable.create({ Name: Name, Email: email, password: hashedPassword });
-            return res.json({ success: true, message: 'Account created successfully' });
-        }
-        else {
-            return res.json({ success: false, message: 'This Account already exists' });
-        }
-    }
-    catch (e) {
-        console.log(e);
+        return res.json({ success: true, message: 'OTP sent successfully' });
+    } catch (error) {
+        console.error('Error in sending OTP:', error);
         return res.status(500).json({ success: false, message: 'An error occurred' });
     }
 };
 
-exports.updatetoken = async (req, res) => {
-    const token = req.header('Authorization');
+
+exports.verifyOTP = async (req, res) => {
+    const { email, otp } = req.body;
 
     try {
-        const decodedToken = jwt.verify(token, process.env.secretKey);
-
-        const user = await userdetailstable.findOne({ where: { id: decodedToken.userid } });
-
-        if (user.ispremiumuser) {
-            const newToken = genrateAcesstoken(user.id, user.ispremiumuser);
-
-            return res.json({ success: true, message: 'token updated', token: newToken });
-        } else {
-            return res.json({ success: false, message: 'User not found' });
+        // Check if email matches admin email
+        if (email !== process.env.ADMIN_EMAIL) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid email address"
+            });
         }
+
+        // Find user
+        const user = await User.findOne({
+            where: { email: email }
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // Check if OTP exists
+        if (!user.otp || !user.otpExpiry) {
+            return res.status(400).json({
+                success: false,
+                message: "No OTP found. Please request a new one."
+            });
+        }
+
+        // Check if OTP is expired
+        const currentTime = moment();
+        if (currentTime.isAfter(moment(user.otpExpiry))) {
+            return res.status(400).json({
+                success: false,
+                message: "OTP has expired. Please request a new one."
+            });
+        }
+
+        // Verify OTP
+        if (user.otp !== otp) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid OTP"
+            });
+        }
+
+        // OTP is valid — clear OTP from DB
+        await User.update(
+            { otp: null, otpExpiry: null },
+            { where: { email: email } }
+        );
+
+        return res.json({
+            success: true,
+            message: "OTP verified successfully"
+        });
+
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ success: false, message: 'An error occurred' });
+        console.error("Error verifying OTP:", error);
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred"
+        });
     }
 };

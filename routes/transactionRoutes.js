@@ -4,7 +4,7 @@ const controller = require('../controller/transaction');
 const router = express.Router();
 
 
-router.post('/billingTranction',controller.purchaseSingleItem)
+router.post('/billingTranction',controller.billing)
 router.get('/dailytransaction',controller.dailytransactionpage)
 router.get('/dailyalltransaction',controller.dailyalltranction)
 router.get('/stock',controller.stockPage)
