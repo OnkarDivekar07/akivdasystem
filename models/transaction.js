@@ -1,36 +1,47 @@
-const Sequelize = require('sequelize')
-const sequelize = require('../util/db');
- 
-    const Transaction = sequelize.define('Transaction', {
-        productId: {
-            type: Sequelize.INTEGER,
-            references: {
-                model: 'Products',
-                key: 'id',
-            },
-            onDelete: 'CASCADE'
-        },
-       itemsPurchased:{
-        type: Sequelize.STRING,
-            allowNull: false,
-       },
-        quantity: {
-            type: Sequelize.INTEGER,
-            allowNull: false,
-        },
-        date: {
-            type: Sequelize.DATE,
-            defaultValue: Sequelize.NOW,
-        },
-        totalAmount:{
-            type: Sequelize.INTEGER,
-            allowNull: false,
-        },
-        profit:{
-            type: Sequelize.INTEGER,
-            allowNull: false,
-        }
-    });
+const { DataTypes } = require("sequelize");
+const sequelize = require("../util/db");
 
+const Transaction = sequelize.define("Transaction", {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+  },
 
-module.exports= Transaction
+  productId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+  },
+
+  itemsPurchased: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+
+  quantity: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+
+  date: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
+
+  totalAmount: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+
+  profit: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+
+  paymentMethod: {
+    type: DataTypes.ENUM("cash", "online"),
+    allowNull: false,
+  },
+});
+
+module.exports = Transaction;

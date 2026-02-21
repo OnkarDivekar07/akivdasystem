@@ -1,4 +1,4 @@
-//http://localhost:5000/transactions/showall
+
 const { Op } = require('sequelize');
 const Transaction  = require('../models/transaction');
 const   Product=require('../models/product')
@@ -7,8 +7,9 @@ const { response } = require('express');
 
 exports.billing = async (req, res) => {
     const billingData = req.body; // Expecting an array of items purchased
-    const totalAmount = parseFloat(billingData[billingData.length - 1].total_amount); // Total amount from the frontend
-
+    const summary = billingData[billingData.length - 1];
+const totalAmount = parseFloat(summary.total_amount);
+const paymentMethod = summary.payment_method || "cash";
     let totalProfit = 0;
     let transactionItems = [];
 
@@ -28,49 +29,49 @@ exports.billing = async (req, res) => {
 
         // Loop through each valid item in the billing data
         for (let item of validItems) {
-            const { item_name, quantity, price, total } = item;
+  const { productId, item_name, quantity, price, total } = item;
 
-            // Ensure quantity and price are valid numbers (they come as strings from the frontend)
-            const quantityNum = parseInt(quantity, 10);
-            const priceNum = parseFloat(price);
-            const totalNum = parseFloat(total);
+  const quantityNum = parseInt(quantity, 10);
+  const priceNum = parseFloat(price);
+  const totalNum = parseFloat(total);
 
-            if (isNaN(quantityNum) || isNaN(priceNum) || isNaN(totalNum)) {
-                throw new Error(`Invalid data for ${item_name}: Quantity, Price, or Total is not a valid number.`);
-            }
+  if (isNaN(quantityNum) || isNaN(priceNum) || isNaN(totalNum)) {
+    throw new Error(`Invalid data for ${item_name}`);
+  }
 
-            // Fetch product details to calculate profit and update stock
-            const product = await Product.findOne({ where: { name: item_name } });
+  const product = await Product.findByPk(productId);
 
-            if (!product) {
-                throw new Error(`Product with name ${item_name} not found.`);
-            }
+  if (!product) {
+    throw new Error(`Product not found for ID ${productId}`);
+  }
 
-            // Calculate profit (Assuming you have a 'costPrice' field in the 'Products' table)
-            const profit = (priceNum - product.price) * quantityNum;
-            totalProfit += profit;
+  if (product.quantity < quantityNum) {
+    throw new Error(`Not enough stock for ${product.name}`);
+  }
 
-            // Decrease product quantity in stock
-            if (product.quantity < quantityNum) {
-                throw new Error(`Not enough stock for ${item_name}`);
-            }
+  const profit = (priceNum - product.price) * quantityNum;
+  totalProfit += profit;
 
-            // Update product quantity in stock
-            await product.update({ quantity: product.quantity - quantityNum }, { transaction });
+  await product.update(
+    { quantity: product.quantity - quantityNum },
+    { transaction }
+  );
 
-            // Create a new transaction record
-            const newTransaction = await Transaction.create({
-                productId: product.id,
-                itemsPurchased: item_name,
-                quantity: quantityNum,
-                totalAmount: totalNum,
-                profit: profit,
-                date: new Date(),
-            }, { transaction });
+  const newTransaction = await Transaction.create(
+    {
+      productId: product.id, // UUID
+      itemsPurchased: product.name,
+      quantity: quantityNum,
+      totalAmount: totalNum,
+      profit,
+      paymentMethod,
+      date: new Date(),
+    },
+    { transaction }
+  );
 
-            // Store the transaction item
-            transactionItems.push(newTransaction);
-        }
+  transactionItems.push(newTransaction);
+}
 
         // Commit the transaction
         await transaction.commit();

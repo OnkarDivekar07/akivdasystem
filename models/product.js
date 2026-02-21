@@ -1,25 +1,32 @@
-const Sequelize = require('sequelize')
-const sequelize = require('../util/db');
- 
-    const Product = sequelize.define('Product', {
-        name: {
-            type: Sequelize.STRING,
-            allowNull: false,
-        },
-        quantity: {
-            type: Sequelize.INTEGER,
-            defaultValue: 0,
-        },
-        price: {
-            type: Sequelize.FLOAT,
-            allowNull: false,
-        },
-        threshold: {
-            type: Sequelize.INTEGER,
-            defaultValue: 5, // or any value you prefer
-            allowNull: false,
-        },
-    });
+const { DataTypes } = require("sequelize");
+const sequelize = require("../util/db");
 
+const Product = sequelize.define("Product", {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  quantity: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  price: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+  lower_threshold: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  upper_threshold: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+});
 
-    module.exports=Product
+module.exports = Product;

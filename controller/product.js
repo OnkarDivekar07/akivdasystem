@@ -21,27 +21,31 @@ const InventoTracking=require('../models/inventoryTracking')
 // };
 
 exports.addProduct = async (req, res) => {
-    try {
-        const products = req.body;  // Capture the data from the request body
+  try {
+    const input = req.body;
+    const products = Array.isArray(input) ? input : [input];
 
-        // If the request body is a single product (not an array), make it an array
-        const productsToCreate = Array.isArray(products) ? products : [products];
+    const sanitizedProducts = products.map((p) => ({
+      name: p.name?.trim(),
+      quantity: Number(p.quantity) || 0,
+      price: Number(p.price) || 0,
+      lower_threshold: Number(p.lower_threshold) || 0,
+      upper_threshold: Number(p.upper_threshold) || 0,
+    }));
 
-        // Create all products using Sequelize
-        const createdProducts = await Product.bulkCreate(productsToCreate);
+    const createdProducts = await Product.bulkCreate(sanitizedProducts);
 
-        // Respond with a success message and the created products
-        res.status(201).json({
-            message: 'Products added successfully',
-            products: createdProducts
-        });
-    } catch (error) {
-        console.error('Error creating product(s):', error);
-        res.status(400).send({
-            message: 'Error creating product(s)',
-            error: error.message
-        });
-    }
+    res.status(201).json({
+      message: "Product(s) added successfully",
+      products: createdProducts,
+    });
+  } catch (error) {
+    console.error("Error creating product:", error);
+    res.status(400).json({
+      message: "Error creating product",
+      error: error.message,
+    });
+  }
 };
 
 
@@ -79,45 +83,25 @@ exports.deleteproduct = async (req, res) => {
 
 
 exports.updateProduct = async (req, res) => {
-    try {
-        const id = req.params.id;
+  try {
+    const { id } = req.params;
 
-        const { name, quantity, price,threshold  } = req.body;
+    const updated = {
+      name: req.body.name,
+      quantity: Number(req.body.quantity),
+      price: Number(req.body.price),
+      lower_threshold: Number(req.body.lower_threshold),
+      upper_threshold: Number(req.body.upper_threshold),
+    };
 
-        // Find the product by primary key (id)
-        const product = await Product.findByPk(id);
+    await Product.update(updated, { where: { id } });
 
-        // If product doesn't exist, return an error
-        if (!product) {
-            console.log('Product not found');
-            return res.status(404).send('Product not found');
-        }
-
-
-
-
-        if (name !== undefined) product.name = name;
-        if (quantity !== undefined) product.quantity = quantity;
-        if (price !== undefined) product.price = price;
-        if (threshold !== undefined) product.threshold = threshold;
-
-
-        // Save the updated product to the database
-        const updatedProduct = await product.save();
-
-
-        // Respond with success and the updated product
-        res.status(200).json({
-            message: 'Product successfully updated',
-            product: updatedProduct
-        });
-    } catch (error) {
-        console.error('Error updating product:', error);
-        res.status(500).send('Internal Server Error');
-    }
+    res.json({ message: "Product updated successfully" });
+  } catch (error) {
+    console.error("Update error:", error);
+    res.status(400).json({ error: error.message });
+  }
 };
-
-
 
 
 // Track weekly inventory only once when server starts on Monday
