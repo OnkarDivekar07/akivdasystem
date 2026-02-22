@@ -41,7 +41,7 @@ app.use('/user', user)
  });
 
  sequelize
- .sync({ alter: true })
+ .sync()
  .then(() => {
    app.listen(PORT, () => {
      console.log(`Server Started On PORT ${PORT}`);
