@@ -41,12 +41,13 @@ app.use('/user', user)
  });
 
  sequelize
- .sync()
- .then(() => {
-   app.listen(PORT, () => {
-     console.log(`Server Started On PORT ${PORT}`);
-   });
- })
- .catch((error) => {
-   console.log(error);
- });
+  .authenticate()
+  .then(() => {
+    console.log("Database connected (sync disabled)");
+    app.listen(PORT, () => {
+      console.log(`Server Started On PORT ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error("Database connection failed:", error);
+  });
