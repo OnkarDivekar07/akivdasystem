@@ -25,29 +25,40 @@ exports.addProduct = async (req, res) => {
     const input = req.body;
     const products = Array.isArray(input) ? input : [input];
 
-    const sanitizedProducts = products.map((p) => ({
-      name: p.name?.trim(),
-      quantity: Number(p.quantity) || 0,
-      price: Number(p.price) || 0,
-      lower_threshold: Number(p.lower_threshold) || 0,
-      upper_threshold: Number(p.upper_threshold) || 0,
-    }));
+    const sanitizedProducts = products
+      .map((p) => ({
+        name: typeof p.name === "string" ? p.name.trim() : null,
+        quantity: Number(p.quantity) || 0,
+        price: Number(p.price) || 0,
+        lower_threshold: Number(p.lower_threshold) || 0,
+        upper_threshold: Number(p.upper_threshold) || 0,
+      }))
+      .filter((p) => p.name); // 🚨 remove invalid names
 
-    const createdProducts = await Product.bulkCreate(sanitizedProducts);
+    if (!sanitizedProducts.length) {
+      return res.status(400).json({
+        message: "No valid products to insert",
+      });
+    }
+
+    const createdProducts = await Product.bulkCreate(sanitizedProducts, {
+      validate: true,
+      ignoreDuplicates: true, // ✅ avoids crashing on existing products
+    });
 
     res.status(201).json({
       message: "Product(s) added successfully",
-      products: createdProducts,
+      inserted: createdProducts.length,
     });
   } catch (error) {
     console.error("Error creating product:", error);
+
     res.status(400).json({
       message: "Error creating product",
-      error: error.message,
+      error: error.errors?.map((e) => e.message) || error.message,
     });
   }
 };
-
 
 // Get all products
 exports.getProduct = async (req, res) => {
