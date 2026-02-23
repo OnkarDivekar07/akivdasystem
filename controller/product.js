@@ -1,5 +1,6 @@
 const Product = require('../models/product'); // Assuming this is your Sequelize model
 const InventoTracking=require('../models/inventoryTracking')
+const sequelize = require("../util/db");
 
 //Add a product
 // exports.addProduct = async (req, res) => {
@@ -154,3 +155,63 @@ async function generateQrCode(productId) {
 // Example usage
 const exampleProductId = "PRD-LEDSTRIP-12V";
 generateQrCode(37);
+
+
+exports.getProductById = async (req, res) => {
+  try {
+    const product = await Product.findByPk(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+exports.addStock = async (req, res) => {
+  const { productId, addQuantity } = req.body;
+
+  if (!productId || !addQuantity || addQuantity <= 0) {
+    return res.status(400).json({ error: "Invalid input" });
+  }
+
+  const transaction = await sequelize.transaction();
+
+  try {
+    const product = await Product.findByPk(productId, { transaction });
+
+    if (!product) {
+      await transaction.rollback();
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    const updatedQty = product.quantity + Number(addQuantity);
+
+    await product.update(
+      { quantity: updatedQty },
+      { transaction }
+    );
+
+    await transaction.commit();
+
+    res.status(200).json({
+      message: "Stock updated successfully",
+      product: {
+        id: product.id,
+        name: product.name,
+        quantity: updatedQty,
+      },
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error(error);
+    res.status(500).json({
+      error: "Failed to update stock",
+      details: error.message,
+    });
+  }
+};
