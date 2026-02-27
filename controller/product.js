@@ -1,7 +1,7 @@
-const Product = require('../models/product'); // Assuming this is your Sequelize model
-const InventoTracking=require('../models/inventoryTracking')
+const Product = require('../models/product');
 const sequelize = require("../util/db");
 const awsService = require("../util/AWSUploads");
+const sharp = require("sharp");
 
 //Add a product
 // exports.addProduct = async (req, res) => {
@@ -166,10 +166,9 @@ exports.addStock = async (req, res) => {
 
 
 
-
 exports.uploadProductImage = async (req, res) => {
   try {
-    const { id } = req.params; // UUID
+    const { id } = req.params;
     const image = req.file;
 
     if (!image) {
@@ -181,18 +180,27 @@ exports.uploadProductImage = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Delete old image if exists
+    // 🧹 Delete old image
     if (product.imageUrl) {
       const oldKey = product.imageUrl.split(".com/")[1];
       await awsService.deleteFromS3(oldKey);
     }
 
-    const key = `product-images/${id}-${Date.now()}-${image.originalname}`;
+    // 🔥 COMPRESS IMAGE (75%)
+    const compressedBuffer = await sharp(image.buffer)
+      .resize({
+        width: 1200,          // optional but recommended
+        withoutEnlargement: true,
+      })
+      .jpeg({ quality: 75 }) // 🔥 75% compression
+      .toBuffer();
+
+    const key = `product-images/${id}-${Date.now()}.jpg`;
 
     const imageUrl = await awsService.uploadToS3(
-      image.buffer,
+      compressedBuffer,
       key,
-      image.mimetype
+      "image/jpeg"
     );
 
     await product.update({ imageUrl });
@@ -201,6 +209,7 @@ exports.uploadProductImage = async (req, res) => {
       message: "Product image uploaded successfully",
       imageUrl,
     });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -209,7 +218,6 @@ exports.uploadProductImage = async (req, res) => {
     });
   }
 };
-
 
 
 /* 🗑️ DELETE PRODUCT IMAGE */
