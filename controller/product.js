@@ -105,59 +105,6 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-
-// Track weekly inventory only once when server starts on Monday
-const trackWeeklyInventory = async () => {
-    try {
-        const today = new Date();
-        if (today.getDay() !== 1) return; // Only execute on Monday
-        
-        const formattedDate = today.toISOString().split('T')[0];
-        const existingRecord = await InventoTracking.findOne({ where: { date: formattedDate } });
-        if (existingRecord) return; // Prevent duplicate entries
-        
-        const products = await Product.findAll();
-        const totalInventoryValue = products.reduce((sum, product) => sum + (product.quantity * product.price), 0);
-        await InventoTracking.create({ date: formattedDate, totalinventoryValue: totalInventoryValue });
-        console.log('Weekly inventory value recorded:', totalInventoryValue);
-    } catch (error) {
-        console.error('Error tracking weekly inventory:', error);
-    }
-};
-
-// Run inventory tracking once when the server starts
-trackWeeklyInventory();
-
-
-
-const QRCode = require('qrcode');
-const fs = require('fs');
-
-// Function to generate QR from product ID
-async function generateQrCode(productId) {
-  // Payload to encode in the QR (can be just productId or JSON)
-  const qrData = JSON.stringify({ productId });
-
-  // File path to save image
-  const fileName = `qr_codes/${productId}.png`;
-
-  try {
-    await QRCode.toFile(fileName, qrData, {
-      errorCorrectionLevel: 'H',
-      width: 300,
-    });
-
-    console.log(`✅ QR code saved as ${fileName}`);
-  } catch (err) {
-    console.error("❌ Failed to generate QR", err);
-  }
-}
-
-// Example usage
-const exampleProductId = "PRD-LEDSTRIP-12V";
-generateQrCode(37);
-
-
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
