@@ -1,6 +1,7 @@
 const Product = require('../models/product'); // Assuming this is your Sequelize model
 const InventoTracking=require('../models/inventoryTracking')
 const sequelize = require("../util/db");
+const awsService = require("../util/AWSUploads");
 
 //Add a product
 // exports.addProduct = async (req, res) => {
@@ -213,5 +214,112 @@ exports.addStock = async (req, res) => {
       error: "Failed to update stock",
       details: error.message,
     });
+  }
+};
+
+
+
+
+exports.uploadProductImage = async (req, res) => {
+  try {
+    const { id } = req.params; // UUID
+    const image = req.file;
+
+    if (!image) {
+      return res.status(400).json({ message: "No image uploaded" });
+    }
+
+    const product = await Product.findByPk(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Delete old image if exists
+    if (product.imageUrl) {
+      const oldKey = product.imageUrl.split(".com/")[1];
+      await awsService.deleteFromS3(oldKey);
+    }
+
+    const key = `product-images/${id}-${Date.now()}-${image.originalname}`;
+
+    const imageUrl = await awsService.uploadToS3(
+      image.buffer,
+      key,
+      image.mimetype
+    );
+
+    await product.update({ imageUrl });
+
+    res.status(200).json({
+      message: "Product image uploaded successfully",
+      imageUrl,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Image upload failed",
+      error: error.message,
+    });
+  }
+};
+
+
+
+/* 🗑️ DELETE PRODUCT IMAGE */
+exports.deleteProductImage = async (req, res) => {
+  try {
+    const { id } = req.params; // UUID
+
+    const product = await Product.findByPk(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    if (!product.imageUrl) {
+      return res.status(400).json({ message: "No image to delete" });
+    }
+
+    // 🔑 Extract S3 key from URL
+    const key = product.imageUrl.split(".com/")[1];
+
+    // 🧹 Delete from S3
+    await awsService.deleteFromS3(key);
+
+    // 🗄️ Remove from DB
+    await product.update({ imageUrl: null });
+
+    res.status(200).json({
+      message: "Product image deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Image delete failed",
+      error: error.message,
+    });
+  }
+};
+
+/* 🇮🇳 UPDATE MARATHI NAME */
+exports.updateMarathiName = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { marathiName } = req.body;
+
+    const product = await Product.findByPk(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    product.marathiName = marathiName;
+    await product.save();
+
+    res.json({
+      message: "Marathi name updated",
+      marathiName,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
 };

@@ -11,6 +11,10 @@ const Product = sequelize.define("Product", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  marathiName: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   quantity: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
@@ -27,6 +31,10 @@ const Product = sequelize.define("Product", {
     type: DataTypes.INTEGER,
     defaultValue: 0,
   },
+  imageUrl: {
+  type: DataTypes.STRING,
+  allowNull: true,
+},
 });
 
 module.exports = Product;
