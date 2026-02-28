@@ -23,6 +23,14 @@ const Product = sequelize.define("Product", {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
+   defaultUnit: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "pcs",
+    validate: {
+      isIn: [["pcs", "jodi", "dozen"]],
+    },
+  },
   lower_threshold: {
     type: DataTypes.INTEGER,
     defaultValue: 0,

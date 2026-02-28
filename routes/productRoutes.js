@@ -9,7 +9,8 @@ const {
   addStock,
   uploadProductImage,
   deleteProductImage,
-  updateMarathiName
+  updateMarathiName,
+  updateDefaultUnit
 } = require("../controller/product");
 
 
@@ -21,6 +22,12 @@ router.get("/:id", getProductById);
 router.put("/updateproduct/:id", updateProduct);
 router.delete("/removeproduct/:id", deleteproduct);
 router.post("/add-stock", addStock);
+// 🔐 add adminAuth middleware later if needed
+router.put(
+  "/:id/unit",
+  updateDefaultUnit
+);
+
 
 // ✅ Product image upload
 router.post(

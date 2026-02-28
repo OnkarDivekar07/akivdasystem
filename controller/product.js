@@ -2,6 +2,7 @@ const Product = require('../models/product');
 const sequelize = require("../util/db");
 const awsService = require("../util/AWSUploads");
 const sharp = require("sharp");
+const ALLOWED_UNITS = ["pcs", "jodi", "dozen"];
 
 //Add a product
 // exports.addProduct = async (req, res) => {
@@ -361,5 +362,47 @@ exports.updateMarathiName = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  }
+};
+
+
+exports.updateDefaultUnit = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { defaultUnit } = req.body;
+
+    // 🔒 Validation
+    if (!ALLOWED_UNITS.includes(defaultUnit)) {
+      return res.status(400).json({
+        message: "Invalid unit. Allowed values: pcs, jodi, dozen",
+      });
+    }
+
+    // 🔍 Find product
+    const product = await Product.findByPk(id);
+
+    if (!product) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    // ✅ Update unit
+    product.defaultUnit = defaultUnit;
+    await product.save();
+
+    return res.status(200).json({
+      message: "Default unit updated successfully",
+      product: {
+        id: product.id,
+        name: product.name,
+        defaultUnit: product.defaultUnit,
+      },
+    });
+  } catch (error) {
+    console.error("Update default unit error:", error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
 };
