@@ -21,6 +21,7 @@ const repayments=require('./routes/repaymentRoutes')
 const emailRoute=require('./routes/email')
 const customerRoute=require('./routes/customerCount')
 const qrRoutes = require("./routes/qrRoutes");
+const internalRoutes =require("./routes/internal.routes");
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -36,6 +37,7 @@ app.use('/user', user)
  app.use('/sendemail',emailRoute)
  app.use('/customers',customerRoute)
  app.use("/qr", qrRoutes);
+ app.use("/api", internalRoutes);
  app.get('/', (req, res) => {
      res.send('Inventory Management API');
  });
