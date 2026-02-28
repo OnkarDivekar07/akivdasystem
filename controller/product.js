@@ -166,36 +166,113 @@ exports.addStock = async (req, res) => {
 
 
 
+// exports.uploadProductImage = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const image = req.file;
+
+//     if (!image) {
+//       return res.status(400).json({ message: "No image uploaded" });
+//     }
+
+//     const product = await Product.findByPk(id);
+//     if (!product) {
+//       return res.status(404).json({ message: "Product not found" });
+//     }
+
+//     // 🧹 Delete old image
+//     if (product.imageUrl) {
+//       const oldKey = product.imageUrl.split(".com/")[1];
+//       await awsService.deleteFromS3(oldKey);
+//     }
+
+//     // 🔥 COMPRESS IMAGE (75%)
+//     const compressedBuffer = await sharp(image.buffer)
+//       .resize({
+//         width: 1200,          // optional but recommended
+//         withoutEnlargement: true,
+//       })
+//       .jpeg({ quality: 75 }) // 🔥 75% compression
+//       .toBuffer();
+
+//     const key = `product-images/${id}-${Date.now()}.jpg`;
+
+//     const imageUrl = await awsService.uploadToS3(
+//       compressedBuffer,
+//       key,
+//       "image/jpeg"
+//     );
+
+//     await product.update({ imageUrl });
+
+//     res.status(200).json({
+//       message: "Product image uploaded successfully",
+//       imageUrl,
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       message: "Image upload failed",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
 exports.uploadProductImage = async (req, res) => {
+  console.log("📥 [UPLOAD] Image upload request received");
+
   try {
     const { id } = req.params;
     const image = req.file;
 
+    console.log("➡️ Product ID:", id);
+    console.log("➡️ File received:", image ? image.originalname : "NO FILE");
+
     if (!image) {
+      console.warn("⚠️ No image in request");
       return res.status(400).json({ message: "No image uploaded" });
     }
 
+    // 🔍 Fetch product
+    console.log("🔍 Fetching product from DB...");
     const product = await Product.findByPk(id);
+
     if (!product) {
+      console.warn("❌ Product not found:", id);
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // 🧹 Delete old image
+    console.log("✅ Product found:", product.name);
+
+    // 🧹 Delete old image if exists
     if (product.imageUrl) {
-      const oldKey = product.imageUrl.split(".com/")[1];
-      await awsService.deleteFromS3(oldKey);
+      try {
+        const oldKey = product.imageUrl.split(".com/")[1];
+        console.log("🧹 Deleting old image:", oldKey);
+        await awsService.deleteFromS3(oldKey);
+        console.log("✅ Old image deleted");
+      } catch (err) {
+        console.error("⚠️ Failed to delete old image (continuing):", err.message);
+      }
     }
 
-    // 🔥 COMPRESS IMAGE (75%)
+    // 🔥 Compress image
+    console.log("🗜️ Compressing image...");
     const compressedBuffer = await sharp(image.buffer)
       .resize({
-        width: 1200,          // optional but recommended
+        width: 1200,
         withoutEnlargement: true,
       })
-      .jpeg({ quality: 75 }) // 🔥 75% compression
+      .jpeg({ quality: 75 })
       .toBuffer();
 
+    console.log("✅ Image compressed. Size:", compressedBuffer.length, "bytes");
+
+    // ☁️ Upload to S3
     const key = `product-images/${id}-${Date.now()}.jpg`;
+    console.log("☁️ Uploading to S3 with key:", key);
 
     const imageUrl = await awsService.uploadToS3(
       compressedBuffer,
@@ -203,22 +280,30 @@ exports.uploadProductImage = async (req, res) => {
       "image/jpeg"
     );
 
+    console.log("✅ Uploaded to S3:", imageUrl);
+
+    // 💾 Update DB
+    console.log("💾 Updating product record...");
     await product.update({ imageUrl });
 
-    res.status(200).json({
+    console.log("🎉 Upload process completed successfully");
+
+    return res.status(200).json({
       message: "Product image uploaded successfully",
       imageUrl,
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
+    console.error("🔥 IMAGE UPLOAD ERROR");
+    console.error("Message:", error.message);
+    console.error("Stack:", error.stack);
+
+    return res.status(500).json({
       message: "Image upload failed",
       error: error.message,
     });
   }
 };
-
 
 /* 🗑️ DELETE PRODUCT IMAGE */
 exports.deleteProductImage = async (req, res) => {
