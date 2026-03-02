@@ -305,4 +305,33 @@ exports.showall = async (req, res) => {
 };
 
 
+exports.dailyEntriesView = async (req, res) => {
+  try {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
 
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const transactions = await Transaction.findAll({
+      where: {
+        date: {
+          [Op.between]: [todayStart, todayEnd],
+        },
+      },
+      attributes: ["itemsPurchased", "quantity", "totalAmount"],
+      order: [["createdAt", "DESC"]],
+    });
+
+    const response = transactions.map((t) => ({
+      itemName: t.itemsPurchased,
+      quantity: t.quantity,
+      total: t.totalAmount,
+    }));
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error("Daily entries error:", error);
+    res.status(500).json({ message: "Failed to load daily entries" });
+  }
+};

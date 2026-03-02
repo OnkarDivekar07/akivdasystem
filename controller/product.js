@@ -122,8 +122,9 @@ exports.getProductById = async (req, res) => {
 
 
 exports.addStock = async (req, res) => {
-  const { productId, addQuantity } = req.body;
+  const { productId, addQuantity, price } = req.body;
 
+  // 🔴 Validation
   if (!productId || !addQuantity || addQuantity <= 0) {
     return res.status(400).json({ error: "Invalid input" });
   }
@@ -140,10 +141,21 @@ exports.addStock = async (req, res) => {
 
     const updatedQty = product.quantity + Number(addQuantity);
 
-    await product.update(
-      { quantity: updatedQty },
-      { transaction }
-    );
+    // 🔥 Build update object
+    const updateData = {
+      quantity: updatedQty,
+    };
+
+    // 🔥 Optional price update
+    if (price !== undefined) {
+      if (price < 0) {
+        await transaction.rollback();
+        return res.status(400).json({ error: "Invalid price" });
+      }
+      updateData.price = price;
+    }
+
+    await product.update(updateData, { transaction });
 
     await transaction.commit();
 
@@ -153,6 +165,7 @@ exports.addStock = async (req, res) => {
         id: product.id,
         name: product.name,
         quantity: updatedQty,
+        price: product.price,
       },
     });
   } catch (error) {
@@ -164,8 +177,6 @@ exports.addStock = async (req, res) => {
     });
   }
 };
-
-
 
 // exports.uploadProductImage = async (req, res) => {
 //   try {

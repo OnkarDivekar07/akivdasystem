@@ -9,5 +9,9 @@ router.get('/dailytransaction',controller.dailytransactionpage)
 router.get('/dailyalltransaction',controller.dailyalltranction)
 router.get('/stock',controller.stockPage)
 router.get('/showall',controller.showall)
+router.get(
+  "/daily-entries-view",
+  controller.dailyEntriesView
+);
 
 module.exports = router;
