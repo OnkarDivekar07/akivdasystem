@@ -28,6 +28,7 @@ app.use(express.static('public')); // Assuming your CSS is in the 'public/css' d
 
 
 
+
 app.use(mainpageroute)
 app.use('/user', user)
  app.use('/products', productRoutes);
