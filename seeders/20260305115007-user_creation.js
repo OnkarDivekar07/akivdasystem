@@ -1,5 +1,4 @@
-'use strict';
-
+const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
 
 module.exports = {
@@ -9,6 +8,7 @@ module.exports = {
 
     await queryInterface.bulkInsert('users', [
       {
+        id: uuidv4(),
         email: process.env.USER_STAFF_EMAIL,
         password: password,
         otp: null,

@@ -3,11 +3,10 @@ const sequelize = require('../util/db');  // Import your Sequelize instance
 
 const User = sequelize.define('user', {
   id: {
-    type: Sequelize.INTEGER,
-    allowNull: false,
-    primaryKey: true,
-    autoIncrement: true,
-  },
+  type: Sequelize.UUID,
+  defaultValue: Sequelize.UUIDV4,
+  primaryKey: true,
+},
   email: {
     type: Sequelize.STRING,
     allowNull: false,
