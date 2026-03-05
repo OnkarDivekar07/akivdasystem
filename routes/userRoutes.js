@@ -7,6 +7,7 @@ const Controller = require('../controller/user')
 
 router.post('/verifyOTP', Controller.verifyOTP)
 router.post('/sendOTP', Controller.sendOTP)
+router.post("/login-password", Controller.loginWithPassword);
 // router.get('/get-new-token', Controller.updatetoken)
 // router.get('', Controller.usergethomePage);
 

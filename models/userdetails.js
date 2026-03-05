@@ -13,6 +13,10 @@ const User = sequelize.define('user', {
     allowNull: false,
     unique: true,  // Ensure emails are unique
   },
+  password: {
+  type: Sequelize.STRING,
+  allowNull: true
+},
   otp: {
     type: Sequelize.STRING,
     allowNull: true,  // Store the OTP

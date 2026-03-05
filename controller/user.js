@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const  User = require('../models/userdetails')
 require('dotenv').config();  // For environment variables
 const generateToken = require("../util/generateToken");
-
+const bcrypt = require("bcrypt");
 // Function to generate a random OTP (6-digit number)
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();  // Generates a 6-character OTP
@@ -140,4 +140,45 @@ return res.json({
             message: "An error occurred"
         });
     }
+};
+
+
+
+exports.loginWithPassword = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email"
+      });
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+
+    if (!valid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid password"
+      });
+    }
+
+    // ✅ Decide role during login
+    const role = email === process.env.ADMIN_EMAIL ? "admin" : "user";
+
+    const token = generateToken(user.id, role);
+
+    res.json({
+      success: true,
+      token: token
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success:false });
+  }
 };
