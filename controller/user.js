@@ -3,6 +3,7 @@ const moment = require('moment');
 const crypto = require('crypto');
 const  User = require('../models/userdetails')
 require('dotenv').config();  // For environment variables
+const generateToken = require("../util/generateToken");
 
 // Function to generate a random OTP (6-digit number)
 const generateOTP = () => {
@@ -124,10 +125,13 @@ exports.verifyOTP = async (req, res) => {
             { where: { email: email } }
         );
 
-        return res.json({
-            success: true,
-            message: "OTP verified successfully"
-        });
+const token = generateToken(user.id, "admin");
+
+return res.json({
+  success: true,
+  message: "OTP verified successfully",
+  token: token
+});
 
     } catch (error) {
         console.error("Error verifying OTP:", error);

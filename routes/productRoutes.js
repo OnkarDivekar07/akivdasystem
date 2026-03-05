@@ -1,5 +1,7 @@
 const express = require("express");
 const upload = require("../uploads/multer");
+const isuser=require("../middleware/auth");
+const isAdmin=require("../middleware/admin")
 const {
   addProduct,
   getProduct,
@@ -16,16 +18,15 @@ const {
 
 const router = express.Router();
 
-router.post("/addproduct", addProduct);
-router.get("/getproduct", getProduct);
-router.get("/:id", getProductById);
-router.put("/updateproduct/:id", updateProduct);
-router.delete("/removeproduct/:id", deleteproduct);
-router.post("/add-stock", addStock);
-// 🔐 add adminAuth middleware later if needed
+router.post("/addproduct",isuser,isAdmin, addProduct);
+router.get("/getproduct",isuser,isAdmin, getProduct);
+router.get("/:id",isuser,isAdmin, getProductById);
+router.put("/updateproduct/:id",isuser,isAdmin, updateProduct);
+router.delete("/removeproduct/:id",isuser,isAdmin, deleteproduct);
+router.post("/add-stock",isuser,isAdmin, addStock);
 router.put(
-  "/:id/unit",
-  updateDefaultUnit
+  "/:id/unit",isuser,
+  isAdmin,updateDefaultUnit
 );
 
 
