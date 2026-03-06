@@ -122,9 +122,8 @@ exports.getProductById = async (req, res) => {
 
 
 exports.addStock = async (req, res) => {
-  const { productId, addQuantity, price } = req.body;
+  const { productId, addQuantity, price, lower_threshold, upper_threshold } = req.body;
 
-  // 🔴 Validation
   if (!productId || !addQuantity || addQuantity <= 0) {
     return res.status(400).json({ error: "Invalid input" });
   }
@@ -141,18 +140,26 @@ exports.addStock = async (req, res) => {
 
     const updatedQty = product.quantity + Number(addQuantity);
 
-    // 🔥 Build update object
     const updateData = {
       quantity: updatedQty,
     };
 
-    // 🔥 Optional price update
+    // Optional price update
     if (price !== undefined) {
       if (price < 0) {
         await transaction.rollback();
         return res.status(400).json({ error: "Invalid price" });
       }
       updateData.price = price;
+    }
+
+    // 🔥 NEW: Optional threshold updates
+    if (lower_threshold !== undefined) {
+      updateData.lower_threshold = Number(lower_threshold);
+    }
+
+    if (upper_threshold !== undefined) {
+      updateData.upper_threshold = Number(upper_threshold);
     }
 
     await product.update(updateData, { transaction });
@@ -166,8 +173,11 @@ exports.addStock = async (req, res) => {
         name: product.name,
         quantity: updatedQty,
         price: product.price,
+        lower_threshold: product.lower_threshold,
+        upper_threshold: product.upper_threshold
       },
     });
+
   } catch (error) {
     await transaction.rollback();
     console.error(error);
@@ -177,7 +187,6 @@ exports.addStock = async (req, res) => {
     });
   }
 };
-
 // exports.uploadProductImage = async (req, res) => {
 //   try {
 //     const { id } = req.params;
