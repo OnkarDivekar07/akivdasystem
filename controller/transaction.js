@@ -169,7 +169,63 @@ const paymentMethod = summary.payment_method || "cash";
 
 
 
+exports.rollbackTransaction = async (req, res) => {
+  const { id } = req.params;
 
+  let transaction;
+
+  try {
+    transaction = await sequelize.transaction();
+
+    const txn = await Transaction.findByPk(id, { transaction });
+
+    if (!txn) {
+      throw new Error("Transaction not found");
+    }
+
+    if (txn.isReversed) {
+      throw new Error("Transaction already reversed");
+    }
+
+    const product = await Product.findByPk(txn.productId, { transaction });
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    // 🔥 restore stock
+    await product.update(
+      {
+        quantity: product.quantity + txn.quantity,
+      },
+      { transaction }
+    );
+
+    // 🔥 mark transaction reversed
+    await txn.update(
+      {
+        isReversed: true,
+      },
+      { transaction }
+    );
+
+    await transaction.commit();
+
+    res.json({
+      message: "Transaction rolled back successfully",
+    });
+
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+
+    console.error(error);
+
+    res.status(500).json({
+      message: "Rollback failed",
+      error: error.message,
+    });
+  }
+};
 
 
 
@@ -228,12 +284,13 @@ exports.dailyalltranction = async (req, res) => {
 
         // Fetch only today's transactions
         const dailyTransactions = await Transaction.findAll({
-            where: {
-                date: {
-                    [Op.between]: [todayStart, todayEnd] // Filter transactions between todayStart and todayEnd
-                }
-            }
-        });
+  where: {
+    isReversed: false,
+    date: {
+      [Op.between]: [todayStart, todayEnd]
+    }
+  }
+});
 
         res.status(200).json(dailyTransactions);
     } catch (error) {
@@ -263,13 +320,14 @@ exports.showall = async (req, res) => {
         const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999); // End of this month
 
         // Fetch daily transactions
-        const dailyTransactions = await Transaction.findAll({
-            where: {
-                date: {
-                    [Op.between]: [startOfDay, endOfDay]
-                }
-            }
-        });
+const dailyTransactions = await Transaction.findAll({
+  where: {
+    isReversed: false,
+    date: {
+      [Op.between]: [startOfDay, endOfDay]
+    }
+  }
+});
 
         // Calculate daily profit and daily sales
         const dailyProfit = dailyTransactions.reduce((total, transaction) => total + transaction.profit, 0);
@@ -277,12 +335,13 @@ exports.showall = async (req, res) => {
 
         // Fetch monthly transactions
         const monthlyTransactions = await Transaction.findAll({
-            where: {
-                date: {
-                    [Op.between]: [startOfMonth, endOfMonth]
-                }
-            }
-        });
+  where: {
+    isReversed: false,
+    date: {
+      [Op.between]: [startOfMonth, endOfMonth]
+    }
+  }
+});
 
         // Calculate monthly profit and monthly sales
         const monthlyProfit = monthlyTransactions.reduce((total, transaction) => total + transaction.profit, 0);
@@ -314,15 +373,15 @@ exports.dailyEntriesView = async (req, res) => {
     todayEnd.setHours(23, 59, 59, 999);
 
     const transactions = await Transaction.findAll({
-      where: {
-        date: {
-          [Op.between]: [todayStart, todayEnd],
-        },
-      },
-      attributes: ["itemsPurchased", "quantity", "totalAmount"],
-      order: [["createdAt", "DESC"]],
-    });
-
+  where: {
+    isReversed: false,
+    date: {
+      [Op.between]: [todayStart, todayEnd],
+    },
+  },
+  attributes: ["itemsPurchased", "quantity", "totalAmount"],
+  order: [["createdAt", "DESC"]],
+});
     const response = transactions.map((t) => ({
       itemName: t.itemsPurchased,
       quantity: t.quantity,

@@ -2,7 +2,8 @@
 const express = require('express');
 const controller = require('../controller/transaction');
 const router = express.Router();
-
+const isAdmin=require("../middleware/admin")
+const isuser=require("../middleware/auth");
 
 router.post('/billingTranction',controller.billing)
 router.get('/dailytransaction',controller.dailytransactionpage)
@@ -13,5 +14,6 @@ router.get(
   "/daily-entries-view",
   controller.dailyEntriesView
 );
+router.post("/rollback/:id",isuser,isAdmin, controller.rollbackTransaction);
 
 module.exports = router;

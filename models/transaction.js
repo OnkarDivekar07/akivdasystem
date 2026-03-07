@@ -42,6 +42,10 @@ const Transaction = sequelize.define("Transaction", {
     type: DataTypes.ENUM("cash", "online"),
     allowNull: false,
   },
+  isReversed: {
+  type: DataTypes.BOOLEAN,
+  defaultValue: false,
+}
 });
 
 module.exports = Transaction;
