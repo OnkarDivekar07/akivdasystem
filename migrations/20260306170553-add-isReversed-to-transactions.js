@@ -2,13 +2,22 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn("transactions", "isReversed", {
-      type: Sequelize.BOOLEAN,
-      defaultValue: false,
-    });
+    const table = await queryInterface.describeTable("Transactions");
+
+    if (!table.isReversed) {
+      await queryInterface.addColumn("Transactions", "isReversed", {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      });
+    }
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.removeColumn("transactions", "isReversed");
+    const table = await queryInterface.describeTable("Transactions");
+
+    if (table.isReversed) {
+      await queryInterface.removeColumn("Transactions", "isReversed");
+    }
   },
 };
