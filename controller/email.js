@@ -97,13 +97,13 @@ exports.sendLowStockEmail = async (req = null, res = null) => {
     try {
        const { lowStock, overStock } = await getStockAlerts();
 
-        if (lowStockProducts.length === 0) {
+        if (lowStock.length === 0 && overStock.length === 0) {
             if (res) return res.status(200).json({
                 message: "No low stock products found.",
                 success: true,
             });
         }
-        console.log(lowStockProducts.length)
+        console.log(lowStock.length)
         let emailContent = "<h2>📦 Daily Inventory Report</h2>";
 
 if (lowStock.length > 0) {
