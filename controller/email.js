@@ -3,21 +3,34 @@ const nodemailer = require("nodemailer");
 const   ProductModel=require('../models/product')
 require("dotenv").config();
 const { Op } = require('sequelize'); // Sequelize operator for filtering
-async function getLowStockProducts() {
-    try {
-        // Fetch all products from the database
-        const products = await ProductModel.findAll();
 
-        // Filter products whose quantity is below their own threshold
-        return products.filter(product => {
-            // Use product.threshold if it exists, else fallback to default
-            const threshold = product.threshold ?? 5;  // Default threshold: 5
-            return product.quantity < threshold;
-        });
-    } catch (error) {
-        console.error("Error fetching low stock products:", error);
-        return [];
-    }
+
+async function getStockAlerts() {
+  try {
+    const products = await ProductModel.findAll();
+
+    const lowStock = [];
+    const overStock = [];
+
+    products.forEach(product => {
+      const lower = product.lower_threshold ?? 5;
+      const upper = product.upper_threshold ?? 100;
+
+      if (product.quantity < lower) {
+        lowStock.push(product);
+      }
+
+      if (product.quantity > upper) {
+        overStock.push(product);
+      }
+    });
+
+    return { lowStock, overStock };
+
+  } catch (error) {
+    console.error("Error fetching stock alerts:", error);
+    return { lowStock: [], overStock: [] };
+  }
 }
 
 // exports.sendLowStockEmail = async (req=null, res=null) => {
@@ -82,7 +95,7 @@ async function getLowStockProducts() {
 
 exports.sendLowStockEmail = async (req = null, res = null) => {
     try {
-        const lowStockProducts = await getLowStockProducts();
+       const { lowStock, overStock } = await getStockAlerts();
 
         if (lowStockProducts.length === 0) {
             if (res) return res.status(200).json({
@@ -91,23 +104,45 @@ exports.sendLowStockEmail = async (req = null, res = null) => {
             });
         }
         console.log(lowStockProducts.length)
-        let emailContent = '<h2>📉 Low Stock Products</h2>';
-        emailContent += '<ul>';
+        let emailContent = "<h2>📦 Daily Inventory Report</h2>";
 
-        lowStockProducts.forEach(product => {
-            const threshold = product.threshold ?? 5;
-            const suggestedAmount = Math.max(threshold * 2 - product.quantity, 0);  // Prevent negative suggestion
+if (lowStock.length > 0) {
+  emailContent += "<h3>⚠️ Low Stock Products</h3><ul>";
 
-            emailContent += `
-                <li>
-                    <strong>${product.name}</strong><br>
-                    Quantity: ${product.quantity}<br>
-                    Suggested Reorder Quantity: <strong>${suggestedAmount}</strong><br>
-                </li>
-            `;
-        });
+  lowStock.forEach(product => {
+    const lower = product.lower_threshold ?? 5;
+    const suggested = Math.max((lower * 2) - product.quantity, 0);
 
-        emailContent += '</ul>';
+    emailContent += `
+      <li>
+        <strong>${product.name}</strong><br>
+        Quantity: ${product.quantity}<br>
+        Minimum Threshold: ${lower}<br>
+        Suggested Reorder: <strong>${suggested}</strong>
+      </li>
+    `;
+  });
+
+  emailContent += "</ul>";
+}
+
+if (overStock.length > 0) {
+  emailContent += "<h3>📈 Overstock Products</h3><ul>";
+
+  overStock.forEach(product => {
+    const upper = product.upper_threshold ?? 100;
+
+    emailContent += `
+      <li>
+        <strong>${product.name}</strong><br>
+        Quantity: ${product.quantity}<br>
+        Maximum Threshold: ${upper}
+      </li>
+    `;
+  });
+
+  emailContent += "</ul>";
+}
 
         const transporter = nodemailer.createTransport({
             service: "gmail",
@@ -147,7 +182,7 @@ exports.sendLowStockEmail = async (req = null, res = null) => {
 
 
 
-cron.schedule("0 9 * * 1", () => {
+cron.schedule("0 9 * * *", () => {
     console.log("Running cron job to send low stock email...");
     exports.sendLowStockEmail()
 });
