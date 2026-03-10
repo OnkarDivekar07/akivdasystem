@@ -46,7 +46,14 @@ const paymentMethod = summary.payment_method || "cash";
   }
 
   if (product.quantity < quantityNum) {
-    throw new Error(`Not enough stock for ${product.name}`);
+    await transaction.rollback();
+
+        return res.status(400).json({
+          error: `Not enough stock`,
+          product: product.name,
+          available: product.quantity,
+          requested: quantityNum
+        });
   }
 
   const profit = (priceNum - product.price) * quantityNum;
