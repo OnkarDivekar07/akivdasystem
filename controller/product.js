@@ -426,3 +426,9 @@ exports.updateDefaultUnit = async (req, res) => {
     });
   }
 };
+
+
+exports.downloadStockExcel = (req, res) => {
+  const filePath = "./stock-maximization-report.xlsx";
+  res.download(filePath);
+};

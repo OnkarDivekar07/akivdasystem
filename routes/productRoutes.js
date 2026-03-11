@@ -12,18 +12,21 @@ const {
   uploadProductImage,
   deleteProductImage,
   updateMarathiName,
-  updateDefaultUnit
+  updateDefaultUnit,
+  downloadStockExcel
 } = require("../controller/product");
 
 
 const router = express.Router();
 
 router.post("/addproduct",isuser,isAdmin, addProduct);
+router.get("/download-stock-report",downloadStockExcel);
 router.get("/getproduct",isuser,isAdmin, getProduct);
 router.get("/:id",getProductById);
 router.put("/updateproduct/:id",isuser,isAdmin, updateProduct);
 router.delete("/removeproduct/:id",isuser,isAdmin, deleteproduct);
 router.post("/add-stock",isuser,isAdmin, addStock);
+
 router.put(
   "/:id/unit",isuser,
   isAdmin,updateDefaultUnit

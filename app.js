@@ -5,6 +5,9 @@ const cors = require('cors');
 const sequelize  = require('./util/db');
 const cron = require("node-cron");
 
+const { generateStockInvestmentExcel } = require("./services/generateStockInvestmentExcel");
+
+generateStockInvestmentExcel();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -87,11 +90,11 @@ app.use('/user', user)
 // ProductSupplier.belongsTo(Supplier, {
 //   foreignKey: "supplier_id",
 // });
-// cron.schedule("*/2 * * * *", async () => {
-//   console.log("Cron running every 2 minutes");
+// // cron.schedule("*/2 * * * *", async () => {
+// //   console.log("Cron running every 2 minutes");
 
-//   await generateAutoOrders();
-// });
+// //   await generateAutoOrders();
+// // });
 
 
 // cron.schedule("0 2 * * *", async () => {
