@@ -3,6 +3,8 @@ const sequelize = require("../util/db");
 const awsService = require("../util/AWSUploads");
 const sharp = require("sharp");
 const ALLOWED_UNITS = ["pcs", "jodi", "dozen"];
+const path = require("path");
+
 
 //Add a product
 // exports.addProduct = async (req, res) => {
@@ -429,6 +431,17 @@ exports.updateDefaultUnit = async (req, res) => {
 
 
 exports.downloadStockExcel = (req, res) => {
-  const filePath = "./stock-maximization-report.xlsx";
-  res.download(filePath);
+  const filePath = path.join(__dirname, "../stock-maximization-report.xlsx");
+
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=stock-maximization-report.xlsx"
+  );
+
+  res.sendFile(filePath);
 };
