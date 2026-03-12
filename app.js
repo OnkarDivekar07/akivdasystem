@@ -5,9 +5,6 @@ const cors = require('cors');
 const sequelize  = require('./util/db');
 const cron = require("node-cron");
 
-const { generateStockInvestmentExcel } = require("./services/generateStockInvestmentExcel");
-
-generateStockInvestmentExcel();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
