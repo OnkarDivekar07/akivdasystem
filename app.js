@@ -29,6 +29,9 @@ const customerRoute=require('./routes/customerCount')
 const qrRoutes = require("./routes/qrRoutes");
 //const purchaseOrders = require("./routes/purchaseOrderRoutes");
 const financeRoutes = require("./routes/financeRoutes");
+//const webhookRoute = require("./routes/webhook");
+const reorderRoutes = require("./routes/reorderRoutes");
+
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -46,9 +49,11 @@ app.use('/user', user)
  app.use('/customers',customerRoute)
  app.use("/qr", qrRoutes);
  //app.use("/purchase-orders", purchaseOrders);
- //app.use("/suppliers", supplierRoutes);
+// app.use("/suppliers", supplierRoutes);
  app.use("/api", financeRoutes);
- 
+ //app.use("/webhook", webhookRoute);
+ app.use("/reorder", reorderRoutes);
+
  app.get('/', (req, res) => {
      res.send('Inventory Management API');
  });
@@ -70,7 +75,7 @@ app.use('/user', user)
 // });
 
 
-// // Product Supplier Relations
+// Product Supplier Relations
 
 // product.hasMany(ProductSupplier, {
 //   foreignKey: "product_id",
@@ -87,12 +92,16 @@ app.use('/user', user)
 // ProductSupplier.belongsTo(Supplier, {
 //   foreignKey: "supplier_id",
 // });
-// // cron.schedule("*/2 * * * *", async () => {
-// //   console.log("Cron running every 2 minutes");
 
-// //   await generateAutoOrders();
-// // });
 
+// PurchaseOrderItem -> Supplier
+// PurchaseOrderItem.belongsTo(Supplier, { foreignKey: "supplier_id" });
+// Supplier.hasMany(PurchaseOrderItem, { foreignKey: "supplier_id" });
+// cron.schedule("*/2 * * * *", async () => {
+//   console.log("Cron running every 2 minutes");
+  
+//   await generateAutoOrders();
+// });
 
 // cron.schedule("0 2 * * *", async () => {
 //   console.log("Running Auto Order Generator...");
