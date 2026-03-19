@@ -15,12 +15,9 @@ async function getStockAlerts() {
 
       const lower = product.lower_threshold ?? 5;
       const upper = product.upper_threshold ?? 100;
-      const halfUpper = upper / 2;
 
-      if (
-        product.quantity <= lower ||
-        product.quantity <= halfUpper
-      ) {
+      // Only check lower threshold
+      if (product.quantity <= lower) {
 
         const orderQty = upper - product.quantity;
 
@@ -122,7 +119,3 @@ exports.sendLowStockEmail = async (req = null, res = null) => {
   }
 };
 
-cron.schedule("0 9 * * *", () => {
-  console.log("Running cron job to send inventory alert email...");
-  exports.sendLowStockEmail();
-});

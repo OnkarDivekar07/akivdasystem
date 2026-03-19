@@ -19,6 +19,7 @@ const  InventoTracking=require('./models/inventoryTracking')
 //const PurchaseOrder = require('./models/PurchaseOrder')
 //const PurchaseOrderItem = require('./models/PurchaseOrderItem')
 //const { generateAutoOrders } = require("./services/autoOrderGenerator");
+const { sendLowStockEmail } = require("./controller/email");
 const user = require('./routes/userRoutes')
 const productRoutes = require('./routes/productRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
@@ -102,6 +103,14 @@ app.use('/user', user)
   
 //   await generateAutoOrders();
 // });
+
+cron.schedule("0 7 * * *", () => {
+  console.log("Running cron job to send inventory alert email...");
+  sendLowStockEmail();
+}, {
+  timezone: "Asia/Kolkata"
+});
+
 
 // cron.schedule("0 2 * * *", async () => {
 //   console.log("Running Auto Order Generator...");
